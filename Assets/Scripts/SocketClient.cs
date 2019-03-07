@@ -16,6 +16,9 @@ public class Message
     // waypoints contain the coordinates that agents
     // can travel between
     public Vector2[] waypoints;
+    // goals are the postions for that the agents
+    // are currntly trying to get to
+    public Vector2[] goals;
     // tick represents the time at which the agents
     // are in the given positions.
     public int tick;
@@ -49,7 +52,10 @@ public class SocketClient : MonoBehaviour
     // Model variables
     // vehicle contains the prefab to create an instance of
     // a vehicle prefab.
-    private GameObject vehicle;
+    public GameObject vehicle;
+    public GameObject road;
+
+    public Material roadM;
 
     // Start is called before the first frame update.
     void Start()
@@ -59,7 +65,7 @@ public class SocketClient : MonoBehaviour
         path = Application.dataPath + "/screenshots/";
 
         // Load in the vehicle prefab
-        vehicle = (GameObject)Resources.Load("prefabs/vehicle", typeof(GameObject));
+        //vehicle = (GameObject)Resources.Load("prefabs/vehicle", typeof(GameObject));
 
         // Connect to the server
         ConnectToTcpServer();
@@ -106,32 +112,43 @@ public class SocketClient : MonoBehaviour
     // ListenForData inits the socketConnection then listens for data from the server.
     private void ListenForData()
     {
-        try
-        {
-            // Connect to the server
-            socketConnection = new TcpClient("localhost", 6666);
-            Byte[] bytes = new Byte[1024];
-            stream = socketConnection.GetStream();
+        while (true) { 
+            try
+            {
+                // Connect to the server
+                socketConnection = new TcpClient("localhost", 6666);
+                Byte[] bytes = new Byte[8192];
+                stream = socketConnection.GetStream();
 
-            while (true)
-            {			
-                // Read incomming stream into byte arrary. 					
-                int length;
-                while ((length = stream.Read(bytes, 0, bytes.Length)) != 0)
+                while (true)
                 {
-                    // Read the message and convert into a string 						
-                    var incommingData = new byte[length];
-                    Array.Copy(bytes, 0, incommingData, 0, length);
-                    string serverMessage = Encoding.ASCII.GetString(incommingData);
+                    // Read incomming stream into byte arrary. 					
+                    int length;
+                    try
+                    {
+                        while ((length = stream.Read(bytes, 0, bytes.Length)) != 0)
+                        {
+                            // Read the message and convert into a string 						
+                            var incommingData = new byte[length];
+                            Array.Copy(bytes, 0, incommingData, 0, length);
+                            string serverMessage = Encoding.ASCII.GetString(incommingData);
 
-                    // Add the data to be acted upon
-                    incomingQueue.Enqueue(serverMessage);
+                            // Add the data to be acted upon
+                            incomingQueue.Enqueue(serverMessage);
+                        }
+                    }
+                    catch (SocketException socketException)
+                    {
+                        Debug.Log("Socket exception: " + socketException + " " + socketException.ErrorCode);
+
+                    }
                 }
-            }      
-        }
-        catch (SocketException socketException)
-        {
-            Debug.Log("Socket exception: " + socketException);
+            }
+            catch (SocketException socketException)
+            {
+                Debug.Log("Socket exception: " + socketException + " " + socketException.ErrorCode);
+                
+            }
         }
     }
 
@@ -139,13 +156,46 @@ public class SocketClient : MonoBehaviour
     // upon the information sent from the server.
     void CreateScene(Message model)
     {
+        Debug.Log("Adding Roads");
+        // Create road system
+        for (int i = 0; i < model.waypoints.Length-1; i++)
+        {
+            int j = i + 1;
+            Vector3 posi = new Vector3(model.waypoints[i].x, 0f, model.waypoints[i].y);
+            Vector3 posj = new Vector3(model.waypoints[j].x, 0f, model.waypoints[j].y);
+
+            // Find the middle between the two points
+            // middle is start plus half the diff
+            // mid = start + (end-start)/2
+            float x = model.waypoints[i].x + ((model.waypoints[j].x - model.waypoints[i].x) / 2);
+            float z = model.waypoints[i].y + ((model.waypoints[j].y - model.waypoints[i].y) / 2);
+
+            Vector3 pos = new Vector3(x, 0f, z);
+            Quaternion rotation = new Quaternion();
+            GameObject currentRoad = Instantiate(road, pos, rotation);
+
+            // Calc and change the length of the road
+            float len = Vector3.Distance(model.waypoints[j], model.waypoints[i]);
+            currentRoad.transform.localScale = new Vector3(3f, 0.1f, len);
+
+            // Rotate the road to look at the next waypoint
+            currentRoad.transform.LookAt(posj);
+
+        }
+
         Debug.Log("Populating Scene");
         // For every agent in the message spawn a vehicle object in
         // the position specified
         for (int i=0; i<model.agents.Length; i++)
         {
-            Vector3 pos = new Vector3(model.agents[i].x, model.agents[i].y);
-            Instantiate(vehicle, pos, Quaternion.identity);
+            // y becomes the z coordinate
+            Vector3 pos = new Vector3(model.agents[i].x, 0f, model.agents[i].y);
+            GameObject v = Instantiate(vehicle, pos, Quaternion.identity);
+            // look at the waypoint they have to get to
+            if (i < model.goals.Length)
+            {
+                v.transform.LookAt(new Vector3(model.goals[i].x, 0f, model.goals[i].y));
+            }
         }
 
         Debug.Log("Finished populating scene");
@@ -176,6 +226,7 @@ public class SocketClient : MonoBehaviour
     // given filepath. Then retruns the filename of the image.
     string TakeScreenshot(string path, int tick)
     {
+        this.GetComponent<Camera>().Render();
         string filename = path + tick + ".png";
         ScreenCapture.CaptureScreenshot(filename);
         return filename;
@@ -192,6 +243,16 @@ public class SocketClient : MonoBehaviour
         foreach (GameObject vehicle in vehicles)
         {
             Destroy(vehicle);
+        }
+
+        // Get all the GameObjects with tag "road"
+        GameObject[] roads;
+        roads = GameObject.FindGameObjectsWithTag("road");
+
+        // Destroy the list of GameObjects
+        foreach (GameObject road in roads)
+        {
+            Destroy(road);
         }
 
         Debug.Log("Cleaned Up Scene");
