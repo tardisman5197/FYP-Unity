@@ -19,6 +19,11 @@ public class Message
     // goals are the postions for that the agents
     // are currntly trying to get to
     public Vector2[] goals;
+    // cameraPosition is the locatoin of the camera
+    public float[] cameraPosition;
+    // cameraDirection is the location the camera
+    // points towards
+    public float[] cameraDirection;
     // tick represents the time at which the agents
     // are in the given positions.
     public int tick;
@@ -54,8 +59,9 @@ public class SocketClient : MonoBehaviour
     // a vehicle prefab.
     public GameObject vehicle;
     public GameObject road;
-
     public Material roadM;
+
+    public Camera cam;
 
     // Start is called before the first frame update.
     void Start()
@@ -197,8 +203,34 @@ public class SocketClient : MonoBehaviour
                 v.transform.LookAt(new Vector3(model.goals[i].x, 0f, model.goals[i].y));
             }
         }
-
         Debug.Log("Finished populating scene");
+
+        // Update the camera position
+        // If there is no specified position calc the position of
+        // the camera
+        if (model.cameraPosition.Length == 3)
+        {
+            cam.transform.position = new Vector3(model.cameraPosition[0], model.cameraPosition[1], model.cameraPosition[2]);
+            cam.transform.LookAt(new Vector3(model.cameraDirection[0], model.cameraDirection[1], model.cameraDirection[2]));
+        } else
+        {
+            // Calc the midpoint of the scene
+            float x = 0;
+            float z = 0;
+
+            for (int i = 0; i < model.waypoints.Length - 1; i++)
+            {
+                x += model.waypoints[i].x;
+                z += model.waypoints[i].y;
+            }
+            x /= model.waypoints.Length;
+            z /= model.waypoints.Length;
+
+            // set the camera position
+            cam.transform.position = new Vector3(x,300,z);
+            // Look stright down
+            cam.transform.LookAt(new Vector3(x, 0, z));
+        }
 
     }
 
