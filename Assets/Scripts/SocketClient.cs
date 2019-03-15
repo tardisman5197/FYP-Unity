@@ -68,7 +68,7 @@ public class SocketClient : MonoBehaviour
     {
         // Init the variables
         incomingQueue = new Queue<string>();
-        path = Application.dataPath + "/screenshots/";
+        path = Application.dataPath+ "/";
 
         // Load in the vehicle prefab
         //vehicle = (GameObject)Resources.Load("prefabs/vehicle", typeof(GameObject));
@@ -258,8 +258,17 @@ public class SocketClient : MonoBehaviour
     // given filepath. Then retruns the filename of the image.
     string TakeScreenshot(string path, int tick)
     {
+        // Generate random unique string
+        const string glyphs = "abcdefghijklmnopqrstuvwxyz";
+        int rndLength = 5;
+        string randomStr = "";
+        for (int i = 0; i < rndLength; i++)
+        {
+            randomStr += glyphs[UnityEngine.Random.Range(0, glyphs.Length)];
+        }
+
         this.GetComponent<Camera>().Render();
-        string filename = path + tick + ".png";
+        string filename = path + randomStr + tick + ".png";
         ScreenCapture.CaptureScreenshot(filename);
         return filename;
     }

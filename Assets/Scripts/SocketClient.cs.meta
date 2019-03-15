@@ -3,7 +3,12 @@ guid: 76da181db5cad19469f6d6e85e749e9b
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - vehicle: {fileID: 796050691759361774, guid: 3105a2936cdc7144c9016f9311d19fd8,
+      type: 3}
+  - road: {fileID: 3285470305358557804, guid: 5ad39dcfda9b76f4bb55499074a481ee, type: 3}
+  - roadM: {fileID: 2100000, guid: b4fe7a8d105196748aa682c67345af15, type: 2}
+  - cam: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
