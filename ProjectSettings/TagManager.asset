@@ -6,6 +6,7 @@ TagManager:
   tags:
   - vehicle
   - road
+  - light
   layers:
   - Default
   - TransparentFX
