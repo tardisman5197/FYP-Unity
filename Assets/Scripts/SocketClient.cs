@@ -19,6 +19,12 @@ public class Message
     // goals are the postions for that the agents
     // are currntly trying to get to
     public Vector2[] goals;
+    // lightPositions stores the positions of all the
+    // lights in the simualtion
+    public Vector2[] lightPositions;
+    //lightStates stores the current states of all of
+    // the lights in the simulation
+    public bool[] lightStates;
     // cameraPosition is the locatoin of the camera
     public float[] cameraPosition;
     // cameraDirection is the location the camera
@@ -54,12 +60,12 @@ public class SocketClient : MonoBehaviour
     // path contains the file path to where screenshots can be saved
     private string path;
 
-    // Model variables
-    // vehicle contains the prefab to create an instance of
-    // a vehicle prefab.
+    // Model variables.
     public GameObject vehicle;
     public GameObject road;
     public Material roadM;
+    public GameObject redLight;
+    public GameObject greenLight;
 
     public Camera cam;
 
@@ -162,8 +168,8 @@ public class SocketClient : MonoBehaviour
     // upon the information sent from the server.
     void CreateScene(Message model)
     {
-        Debug.Log("Adding Roads");
         // Create road system
+        Debug.Log("Adding Roads");
         for (int i = 0; i < model.waypoints.Length-1; i++)
         {
             int j = i + 1;
@@ -189,9 +195,9 @@ public class SocketClient : MonoBehaviour
 
         }
 
-        Debug.Log("Populating Scene");
         // For every agent in the message spawn a vehicle object in
         // the position specified
+        Debug.Log("Populating Scene");
         for (int i=0; i<model.agents.Length; i++)
         {
             // y becomes the z coordinate
@@ -205,6 +211,26 @@ public class SocketClient : MonoBehaviour
         }
         Debug.Log("Finished populating scene");
 
+        // Add the traffic lights to the scene
+        Debug.Log("Added traffic Lights");
+        if (model.lightPositions.Length == model.lightStates.Length) {
+            for (int i=0; i<model.lightPositions.Length; i++)
+            {
+                // y becomes the z coordinate
+                Vector3 pos = new Vector3(model.lightPositions[i].x, 0f, model.lightPositions[i].y);
+                // true means a red light
+                // false means a green light
+                if (model.lightStates[i])
+                {
+                    Instantiate(redLight, pos, Quaternion.identity);
+                }
+                else
+                {
+                    Instantiate(greenLight, pos, Quaternion.identity);
+                }
+            }
+        }
+
         // Update the camera position
         // If there is no specified position calc the position of
         // the camera
@@ -212,7 +238,8 @@ public class SocketClient : MonoBehaviour
         {
             cam.transform.position = new Vector3(model.cameraPosition[0], model.cameraPosition[1], model.cameraPosition[2]);
             cam.transform.LookAt(new Vector3(model.cameraDirection[0], model.cameraDirection[1], model.cameraDirection[2]));
-        } else
+        }
+        else
         {
             // Calc the midpoint of the scene
             float x = 0;
@@ -294,6 +321,16 @@ public class SocketClient : MonoBehaviour
         foreach (GameObject road in roads)
         {
             Destroy(road);
+        }
+
+        // Get all the GameObjects with tag "light"
+        GameObject[] lights;
+        lights = GameObject.FindGameObjectsWithTag("light");
+
+        // Destroy the list of GameObjects
+        foreach (GameObject light in lights)
+        {
+            Destroy(light);
         }
 
         Debug.Log("Cleaned Up Scene");
