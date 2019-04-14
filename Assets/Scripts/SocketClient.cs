@@ -60,6 +60,10 @@ public class SocketClient : MonoBehaviour
     // path contains the file path to where screenshots can be saved
     private string path;
 
+    // scale is used to resize all of the positoins of the
+    // simultaion
+    private float scale = 2;
+
     // Model variables.
     public GameObject vehicle;
     public GameObject road;
@@ -173,8 +177,8 @@ public class SocketClient : MonoBehaviour
         for (int i = 0; i < model.waypoints.Length-1; i++)
         {
             int j = i + 1;
-            Vector3 posi = new Vector3(model.waypoints[i].x, 0f, model.waypoints[i].y);
-            Vector3 posj = new Vector3(model.waypoints[j].x, 0f, model.waypoints[j].y);
+            Vector3 posi = new Vector3(model.waypoints[i].x*scale, 0f, model.waypoints[i].y*scale);
+            Vector3 posj = new Vector3(model.waypoints[j].x*scale, 0f, model.waypoints[j].y*scale);
 
             // Find the middle between the two points
             // middle is start plus half the diff
@@ -182,13 +186,13 @@ public class SocketClient : MonoBehaviour
             float x = model.waypoints[i].x + ((model.waypoints[j].x - model.waypoints[i].x) / 2);
             float z = model.waypoints[i].y + ((model.waypoints[j].y - model.waypoints[i].y) / 2);
 
-            Vector3 pos = new Vector3(x, 0f, z);
+            Vector3 pos = new Vector3(x*scale, 0f, z*scale);
             Quaternion rotation = new Quaternion();
             GameObject currentRoad = Instantiate(road, pos, rotation);
 
             // Calc and change the length of the road
             float width = 4f;
-            float len = Vector3.Distance(model.waypoints[j], model.waypoints[i]) + width;
+            float len = Vector3.Distance(model.waypoints[j]*scale, model.waypoints[i]*scale) + width;
             currentRoad.transform.localScale = new Vector3(width, 0.1f, len);
 
             // Rotate the road to look at the next waypoint
@@ -202,12 +206,12 @@ public class SocketClient : MonoBehaviour
         for (int i=0; i<model.agents.Length; i++)
         {
             // y becomes the z coordinate
-            Vector3 pos = new Vector3(model.agents[i].x, 0f, model.agents[i].y);
+            Vector3 pos = new Vector3(model.agents[i].x*scale, 0f, model.agents[i].y*scale);
             GameObject v = Instantiate(vehicle, pos, Quaternion.identity);
             // look at the waypoint they have to get to
             if (i < model.goals.Length)
             {
-                v.transform.LookAt(new Vector3(model.goals[i].x, 0f, model.goals[i].y));
+                v.transform.LookAt(new Vector3(model.goals[i].x*scale, 0f, model.goals[i].y*scale));
             }
         }
         Debug.Log("Finished populating scene");
@@ -218,7 +222,7 @@ public class SocketClient : MonoBehaviour
             for (int i=0; i<model.lightPositions.Length; i++)
             {
                 // y becomes the z coordinate
-                Vector3 pos = new Vector3(model.lightPositions[i].x, 2f, model.lightPositions[i].y);
+                Vector3 pos = new Vector3(model.lightPositions[i].x*scale, 2f, model.lightPositions[i].y*scale);
                 // true means a red light
                 // false means a green light
                 if (model.lightStates[i])
@@ -237,8 +241,8 @@ public class SocketClient : MonoBehaviour
         // the camera
         if (model.cameraPosition.Length == 3)
         {
-            cam.transform.position = new Vector3(model.cameraPosition[0], model.cameraPosition[1], model.cameraPosition[2]);
-            cam.transform.LookAt(new Vector3(model.cameraDirection[0], model.cameraDirection[1], model.cameraDirection[2]));
+            cam.transform.position = new Vector3(model.cameraPosition[0]*scale, model.cameraPosition[1]*scale, model.cameraPosition[2]*scale);
+            cam.transform.LookAt(new Vector3(model.cameraDirection[0]*scale, model.cameraDirection[1]*scale, model.cameraDirection[2]*scale));
         }
         else
         {
@@ -255,9 +259,9 @@ public class SocketClient : MonoBehaviour
             z /= model.waypoints.Length;
 
             // set the camera position
-            cam.transform.position = new Vector3(x,300,z);
+            cam.transform.position = new Vector3(x*scale,300,z*scale);
             // Look stright down
-            cam.transform.LookAt(new Vector3(x, 0, z));
+            cam.transform.LookAt(new Vector3(x*scale, 0, z*scale));
         }
 
     }
