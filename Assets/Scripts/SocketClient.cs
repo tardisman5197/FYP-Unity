@@ -187,8 +187,9 @@ public class SocketClient : MonoBehaviour
             GameObject currentRoad = Instantiate(road, pos, rotation);
 
             // Calc and change the length of the road
-            float len = Vector3.Distance(model.waypoints[j], model.waypoints[i]);
-            currentRoad.transform.localScale = new Vector3(3f, 0.1f, len);
+            float width = 4f;
+            float len = Vector3.Distance(model.waypoints[j], model.waypoints[i]) + width;
+            currentRoad.transform.localScale = new Vector3(width, 0.1f, len);
 
             // Rotate the road to look at the next waypoint
             currentRoad.transform.LookAt(posj);
@@ -217,7 +218,7 @@ public class SocketClient : MonoBehaviour
             for (int i=0; i<model.lightPositions.Length; i++)
             {
                 // y becomes the z coordinate
-                Vector3 pos = new Vector3(model.lightPositions[i].x, 0f, model.lightPositions[i].y);
+                Vector3 pos = new Vector3(model.lightPositions[i].x, 2f, model.lightPositions[i].y);
                 // true means a red light
                 // false means a green light
                 if (model.lightStates[i])

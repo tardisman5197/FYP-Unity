@@ -38,3 +38,5 @@ sysinfo.txt
 Assets/screenshots/*.png
 Assets/screenshots/*.meta
 *.png
+*.png.meta
+
